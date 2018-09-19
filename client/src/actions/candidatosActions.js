@@ -280,7 +280,6 @@ export const getDadosCandidato = (
     );
 
     dadosCandidato.score = score;
-
     dispatch({ type: SET_DADOS_CANDIDATO, dadosCandidato });
     dispatch(calculaScorePorTema(respostasUsuario, arrayRespostasUsuario));
   });

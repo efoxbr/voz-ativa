@@ -10,7 +10,8 @@
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client",
-    "docs": "documentation build 'server.js' -f html -o docs"
+    "docs": "documentation build 'server.js' -f html -o docs",
+    "test": "jest"
   },
   "engines": {
     "node": "8.11.4",
@@ -27,14 +28,19 @@
   },
   "homepage": "https://github.com/analytics-ufcg/voz-ativa#readme",
   "dependencies": {
+    "babel-jest": "^23.6.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
     "body-parser": "^1.18.3",
     "concurrently": "^4.0.1",
     "express": "^4.16.3",
     "heroku-logger": "^0.3.1",
     "mongoose": "^5.2.10",
-    "react-device-detect": "^1.5.9"
+    "react-device-detect": "^1.5.9",
+    "react-test-renderer": "^16.5.1"
   },
   "devDependencies": {
+    "jest": "^23.6.0",
     "nodemon": "^1.18.3"
   }
 }
