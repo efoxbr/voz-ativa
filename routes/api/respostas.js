@@ -114,33 +114,72 @@ router.get("/candidatos/naoresponderam", (req, res) => {
     .catch(err => res.status(BAD_REQUEST).json({ err }));
 });
 
+
 /**
- * Pega as respostas por estado.
- * @name get/api/respostas/estados/<uf>
+ * Pega todos os partidos de um estado.
+ * @name get/api/respostas/estados/<uf>/partidos
  * @function
  * @memberof module:routes/respostas
- * @param {string} UF - Estado
+ * @param {string} uf - Estado
+ */
+router.get("/estados/:uf/partidos", (req, res) => {
+  Resposta.find({ uf: req.params.uf })
+    .then(respostas => {
+      const partidosSet = new Set();
+      respostas.forEach(resposta => {
+        partidosSet.add(resposta.sg_partido);
+      });
+      let partidos = Array.from(partidosSet).sort((a, b) => a.localeCompare(b));
+      partidos.splice(0, 0, "Partidos");
+      res.json({ data: partidos });
+    })
+    .catch(err => res.status(BAD_REQUEST).json({ err }));
+});
+
+
+/**
+ * Pega as respostas por estado.
+ * @name get/api/respostas/estados/<uf>?partido=<partido>&nome=<nome>&responderam=<responderam>&reeleicao=<reeleicao>
+ * @function
+ * @memberof module:routes/respostas
+ * @param {string} uf - Estado
  */
 router.get("/estados/:uf", (req, res) => {
   query = {};
   const partido = String(req.query.partido);
   const nome = String(req.query.nome);
-  const pattern = new RegExp(nome, "i");
-  console.log(pattern);
 
-  if (nome !== "undefined" && partido !== "undefined") {
-    query = {
-      uf: req.params.uf,
-      sg_partido: partido,
-      nome_urna: { $regex: pattern }
-    };
-  } else if (nome !== "undefined" && partido === "undefined") {
-    query = { uf: req.params.uf, nome_urna: { $regex: pattern } };
-  } else if (partido !== "undefined" && nome === "undefined") {
-    query = { uf: req.params.uf, sg_partido: partido };
-  } else {
-    query = { uf: req.params.uf };
+  const responderam =
+    String(req.query.responderam) !== "-1"
+      ? Number(req.query.responderam) !== -1
+        ? true
+        : false
+      : String(req.query.responderam);
+
+  const reeleicao = String(req.query.reeleicao);
+  const pattern = new RegExp(nome, "i");
+
+  const isFiltrandoPorNome = nome !== "";
+  const isFiltrandoPorPartido = partido !== "Partidos";
+  const isFiltrandoPorReeleicao = reeleicao !== "-1";
+  const isFiltrandoPorRespondeu = responderam !== "-1";
+
+  query = {};
+  query.uf = req.params.uf;
+
+  if (isFiltrandoPorNome) {
+    query.nome_urna = { $regex: pattern };
   }
+  if (isFiltrandoPorPartido) {
+    query.sg_partido = partido;
+  }
+  if (isFiltrandoPorReeleicao) {
+    query.reeleicao = reeleicao;
+  }
+  if (isFiltrandoPorRespondeu) {
+    query.respondeu = responderam;
+  }
+
   console.log(query);
 
   Resposta.countDocuments({ uf: req.params.uf }, (err, totalCount) => {
@@ -407,9 +446,13 @@ router.get("/estados/:uf/naoresponderam", (req, res) => {
   });
 });
 
-// @route   GET api/respostas/estados/<uf>/eleitos
-// @desc    Pega as respostas por estado de quem se elegeu
-// @access  Public
+
+/**
+ *  Pega as respostas por estado de quem se elegeu.
+ * @name get/api/respostas/estados/<uf>/eleitos
+ * @memberof module:routes/respostas
+ * @param {string} UF - Estado
+ */
 router.get("/estados/:uf/eleitos", (req, res) => {
   Resposta.countDocuments(
     { uf: req.params.uf, eleito: true },

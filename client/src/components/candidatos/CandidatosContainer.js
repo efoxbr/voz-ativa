@@ -76,13 +76,14 @@ class CandidatosContainer extends Component {
   }
 
   pegaPrimeiraPagina() {
-    const { totalCandidatos } = this.props.candidatos.paginacao;
+    const { totalCandidatos, paginaAtualAPI } = this.props.candidatos.paginacao;
 
     const paginacao = {
       inicio: 0,
       final: TAM_PAGINA,
       totalCandidatos: totalCandidatos,
-      paginaAtual: 1
+      paginaAtual: 1,
+      paginaAtualAPI
     };
     this.props.setPaginacao(paginacao);
   }
@@ -95,26 +96,43 @@ class CandidatosContainer extends Component {
         inicio: paginacao.inicio - TAM_PAGINA,
         final: paginacao.inicio,
         totalCandidatos: paginacao.totalCandidatos,
-        paginaAtual: paginacao.paginaAtual - 1
+        paginaAtual: paginacao.paginaAtual - 1,
+        paginaAtualAPI: paginacao.paginaAtualAPI
       };
       this.props.setPaginacao(novaPaginacao);
     }
   }
 
   pegaProximosCandidatos() {
-    const { paginacao } = this.props.candidatos;
+    const { paginacao, candidatosRanqueados } = this.props.candidatos;
 
     //this.props.getProximaPaginaCandidatos();
 
-    if (paginacao.final + TAM_PAGINA <= paginacao.totalCandidatos) {
+    // Se a paginação estiver navegando dentro dos candidatos que já foram pegos da API
+    if (paginacao.final + TAM_PAGINA <= candidatosRanqueados.length) {
       const novaPaginacao = {
         inicio: paginacao.final,
         final: paginacao.final + TAM_PAGINA,
         totalCandidatos: paginacao.totalCandidatos,
+        paginaAtualAPI: paginacao.paginaAtualAPI,
         paginaAtual: paginacao.paginaAtual + 1
       };
       this.props.setPaginacao(novaPaginacao);
-    } else if (
+    }
+    // Se a paginação precisar de mais gente, faz uma chamada à API.
+    else if (paginacao.final + TAM_PAGINA <= paginacao.totalCandidatos) {
+      const novaPaginacao = {
+        inicio: paginacao.final,
+        final: paginacao.final + TAM_PAGINA,
+        totalCandidatos: paginacao.totalCandidatos,
+        paginaAtualAPI: paginacao.paginaAtualAPI + 1,
+        paginaAtual: paginacao.paginaAtual + 1
+      };
+      this.props.setPaginacao(novaPaginacao);
+      this.props.getProximaPaginaCandidatos();
+    }
+    // Chegamos na última página e verificamos se ainda existem itens sobrando (Trata casos quando a última página é menor que a quantidade de itens nela)
+    else if (
       paginacao.final + (paginacao.totalCandidatos % TAM_PAGINA) <=
       paginacao.totalCandidatos
     ) {
@@ -122,7 +140,8 @@ class CandidatosContainer extends Component {
         inicio: paginacao.final,
         final: paginacao.final + (paginacao.totalCandidatos % TAM_PAGINA),
         totalCandidatos: paginacao.totalCandidatos,
-        paginaAtual: paginacao.paginaAtual + 1
+        paginaAtual: paginacao.paginaAtual,
+        paginaAtualAPI: paginacao.paginaAtualAPI
       };
       this.props.setPaginacao(novaPaginacao);
     }
@@ -507,7 +526,7 @@ class CandidatosContainer extends Component {
                 </div>
               </div>
               <div className="col-md-6">
-                <div class="form-group form-check">
+                <div className="form-group form-check">
                   <input
                     id="reeleitos"
                     type="checkbox"
@@ -515,13 +534,13 @@ class CandidatosContainer extends Component {
                     onChange={this.buscaReeleitos}
                     defaultChecked={filtro.reeleicao === "1" ? true : false}
                   />
-                  <label className="form-check-label" for="reeleitos">
+                  <label className="form-check-label" htmlFor="reeleitos">
                     {listaSelectReeleicao}
                   </label>
                 </div>
               </div>
               <div className="col-md-6">
-                <div class="form-group form-check">
+                <div className="form-group form-check">
                   <input
                     id="responderam"
                     type="checkbox"
@@ -529,7 +548,7 @@ class CandidatosContainer extends Component {
                     onChange={this.buscaRespondeu}
                     defaultChecked={filtro.respondeu === "1" ? true : false}
                   />
-                  <label className="form-check-label" for="responderam">
+                  <label className="form-check-label" htmlFor="responderam">
                     responderam o questionário
                   </label>
                 </div>
@@ -582,9 +601,9 @@ class CandidatosContainer extends Component {
     return (
       <div>
         <FlipMove>
-          {isExibeCandidatos ? exibeCandidatos : null}
-          {isExibeContinueVotando ? <ContinueVotando /> : null}
-          {isExibeBoasVindas ? <BoasVindas /> : null}
+          {isExibeCandidatos && exibeCandidatos}
+          {isExibeContinueVotando && <ContinueVotando />}
+          {isExibeBoasVindas && <BoasVindas />}
         </FlipMove>
       </div>
     );
