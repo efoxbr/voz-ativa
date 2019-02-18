@@ -14,7 +14,11 @@ export const getDadosPerguntas = () => dispatch => {
   let dadosPerguntas = [];
 
   Object.keys(perguntas).forEach(key => {
-    dadosPerguntas[perguntas[key].id] = perguntas[key];
+    dadosPerguntas[perguntas[key].sequencia] = perguntas[key];
+  });
+
+  dadosPerguntas.sort(function(a, b){
+    return a.sequencia == b.sequencia ? 0 : +(a.sequencia > b.sequencia) || -1;
   });
 
   dispatch({ type: SET_DADOS_PERGUNTAS, dadosPerguntas, TAM_PERGUNTAS });
